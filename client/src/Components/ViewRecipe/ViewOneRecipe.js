@@ -3,11 +3,13 @@ import {useParams} from "react-router-dom";
 import {IoIosTimer} from 'react-icons/io'
 import {MdOutlineFoodBank} from 'react-icons/md'
 import {GiCook} from 'react-icons/gi'
-import {FcLikePlaceholder as NotLiked, FcLike as Liked} from 'react-icons/fc'
-import {MdOutlineStarPurple500 as FilledStar} from 'react-icons/md'
+import {FcLike as Liked} from 'react-icons/fc'
+import {FiLoader} from 'react-icons/fi'
+import {AiOutlineHeart as NotLiked} from 'react-icons/ai'
 import {MdOutlineStarOutline as EmptyStar} from 'react-icons/md'
 import defaultImage from '../../img/food-svgrepo-com.svg'
 import {serverUrl} from "../../constants";
+import Pdf from "react-to-pdf";
 
 const ViewOneRecipe = () => {
     const params = useParams()
@@ -17,16 +19,18 @@ const ViewOneRecipe = () => {
     const [canRate, setCanRate] = useState(true)
     const contentBlock = useRef()
     const rating = [EmptyStar, EmptyStar, EmptyStar, EmptyStar, EmptyStar]
+    const pdfOptions = {orientation: 'landscape'};
 
     const checkRating = async () => {
         const token = localStorage.getItem('recipe_token')
-        await fetch('http://localhost:4000/recipe/checkRating', {method: 'post', body: JSON.stringify({token, recipe: params.dish}), headers: {'Content-Type': 'application/json'}})
+        await fetch(`${serverUrl}/recipe/checkRating`, {method: 'post', body: JSON.stringify({token, recipe: params.dish}), headers: {'Content-Type': 'application/json'}})
             .then(response => response.json()).then(result => {
                 console.log(result)
                 if(result.message === 'Already rated') {setCanRate(false)}
                 if(result.error && result.error.name === 'TokenExpiredError') {
                     alert('Your token expired, you need to log in again')
                     localStorage.removeItem('recipe_token')
+                    window.location.reload()
                 } else {
                     const rating = result.rating
                     const stars = document.getElementsByClassName('ratingStar')
@@ -38,7 +42,7 @@ const ViewOneRecipe = () => {
     const rateRecipeHandler = async (index) => {
         const rate = index + 1
         const token = localStorage.getItem('recipe_token')
-        await fetch('http://localhost:4000/recipe/rateRecipe', {
+        await fetch(`${serverUrl}/recipe/rateRecipe`, {
             method: 'put',
             body: JSON.stringify({rate, token, recipe: recipe.dish_name}),
             headers: {'Content-Type': 'application/json'}
@@ -48,6 +52,7 @@ const ViewOneRecipe = () => {
                 if(result.error && result.error.name === 'TokenExpiredError') {
                     alert('Your token expired, you need to log in again')
                     localStorage.removeItem('recipe_token')
+                    window.location.reload()
                 }
             })
             .catch(err => {
@@ -86,6 +91,7 @@ const ViewOneRecipe = () => {
                 if(result.error && result.error.name === 'TokenExpiredError') {
                     alert('Your token expired, you need to log in again')
                     localStorage.removeItem('recipe_token')
+                    window.location.reload()
                 }
                 if (result.message === 'Already added') setIsInFavorites(true)
                 else setIsInFavorites(false)
@@ -106,6 +112,7 @@ const ViewOneRecipe = () => {
                 if(result.error && result.error.name === 'TokenExpiredError') {
                     alert('Your token expired, you need to log in again')
                     localStorage.removeItem('recipe_token')
+                    window.location.reload()
                 }
                 if (result.message === 'Added to favorites') {
                     setIsInFavorites(true)
@@ -128,6 +135,7 @@ const ViewOneRecipe = () => {
                 if(result.error && result.error.name === 'TokenExpiredError') {
                     alert('Your token expired, you need to log in again')
                     localStorage.removeItem('recipe_token')
+                    window.location.reload()
                 }
                 if (result.message === 'Deleted from favorites') {
                     setIsInFavorites(false)
@@ -147,18 +155,20 @@ const ViewOneRecipe = () => {
 
     const trimTime = (time) => time.split('')[0] == 0 ? time.split('')[1] : time
 
-    return (!recipe.dish_name ? 'Loading...' :
+    return (!recipe.dish_name ? <FiLoader/> :
             <div className='viewOneRecipeContainer'>
                 <div ref={contentBlock} className='viewOneRecipeContentContainer'>
                     <div><h1>{recipe.dish_name}</h1></div>
                     <div><span><i>{recipe.dish_description}</i></span></div>
                     <div className='viewOneRecipeLevelAndTime'>
+<div>
                         <div>Level: {recipe.howhard}</div>
-                        <div><IoIosTimer/> Preparation:
-                            ~ {recipe.preparation_time.split(':')[0] !== '00' && trimTime(recipe.preparation_time.split(':')[0]) + ' hour(s)'} {recipe.preparation_time.split(':')[1] !== '00' && trimTime(recipe.preparation_time.split(':')[1]) + ' minutes'}
-                        </div>
+                        <div><IoIosTimer/> Preparation: ~ {recipe.preparation_time.split(':')[0] !== '00' && trimTime(recipe.preparation_time.split(':')[0]) + ' hour(s)'} {recipe.preparation_time.split(':')[1] !== '00' && trimTime(recipe.preparation_time.split(':')[1]) + ' minutes'}</div>
+</div>
+                        <div>
                         <div><MdOutlineFoodBank/> Portions: {recipe.portions}</div>
                         <div><GiCook/> Author: {recipe.author_email}</div>
+                        </div>
                     </div>
                     <div className='viewOneRecipeIngredientsAndCategoriesContainer'>
                         <div className='viewOneRecipeCategories'><b>Categories:</b>
@@ -172,8 +182,8 @@ const ViewOneRecipe = () => {
                         <ul>{recipe.steps.map((step, index) => <li key={index}><b>Step {index + 1}</b>: <p>{step}</p>
                         </li>)}</ul>
                     </div>
-                    <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                        {localStorage.getItem('recipe_token') && rating.map((star, index) => <Fragment
+                    <div className='oneRecipeFooter'>
+                        <div style={{display: 'flex'}}>{localStorage.getItem('recipe_token') && rating.map((star, index) => <div
                             key={index}><EmptyStar className='ratingStar'
                             style={{fontSize: '2em'}}
                                                    onMouseOver={(e) => {
@@ -192,11 +202,8 @@ const ViewOneRecipe = () => {
                                                         }
                                                     }}
                             onClick={() => canRate && rateRecipeHandler(index)}
-                        /></Fragment>)}
-                        <span style={{
-                            fontSize: '1.5em',
-                            marginLeft: '2%'
-                        }}>{recipe.favorites ? recipe.favorites.length + ' chef(s) added to favorites' : 'No one added to favorites yet'} </span>
+                        /></div>)}</div>
+                        <div style={{display: 'flex'}}><span className='favoritesMessage'>{recipe.favorites ? recipe.favorites.length + ' chef(s) added to favorites' : 'No one added to favorites yet'} </span>
 
                         {localStorage.getItem('recipe_token') &&
                         isInFavorites ? <Liked
@@ -206,8 +213,12 @@ const ViewOneRecipe = () => {
                             <NotLiked
                                 onMouseOver={(e) => {e.target.style.cursor = 'pointer'}}
                                 onClick={addToFavoritesHandler}
-                                style={{fontSize: '2em', marginLeft: '2%', marginRight: '2%'}}/>}
-                        <button>Download recipe in PDF</button>
+                                style={{fontSize: '2em', marginLeft: '2%', marginRight: '2%'}}/>}</div>
+                        <div>
+                            <Pdf targetRef={contentBlock} filename={`${recipe.dish_name} recipe.pdf`} options={pdfOptions}>
+                                {({ toPdf }) => <button onClick={toPdf}>Generate PDF</button>}
+                            </Pdf>
+                        </div>
                     </div>
                 </div>
 

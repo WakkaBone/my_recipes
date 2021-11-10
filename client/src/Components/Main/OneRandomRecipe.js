@@ -1,6 +1,5 @@
 import React, {Fragment} from 'react';
-import {MdOutlineStarPurple500 as FilledStar} from 'react-icons/md'
-import {MdOutlineStarOutline as EmptyStar} from 'react-icons/md'
+import {MdOutlineStarPurple500 as FilledStar, MdOutlineStarOutline as EmptyStar} from 'react-icons/md'
 import defaultImage from '../../img/food-svgrepo-com.svg'
 
 const OneRandomRecipe = ({recipe}) => {

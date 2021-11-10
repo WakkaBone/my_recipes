@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import { Navigate } from 'react-router-dom'
 import {serverUrl} from "../../constants";
+import OneRecipe from "../ViewRecipe/OneRecipe";
 
 const FavoritesIndex = () => {
     const [favorites, setFavorites] = useState([])
@@ -12,6 +13,7 @@ const FavoritesIndex = () => {
                 if(result.error && result.error.name === 'TokenExpiredError') {
                     alert('Your token expired, you need to log in again')
                     localStorage.removeItem('recipe_token')
+                    window.location.reload()
                 }
                 setFavorites(result.recipes)
             })
@@ -20,12 +22,10 @@ const FavoritesIndex = () => {
 
     useEffect(() => {getFavorites()}, [])
 
-    //TODO DESIGN
-
     if(!localStorage.getItem('recipe_token')) return <Navigate to='/'/>
     else return (<div>
-        <h1>My favorites</h1>
-        {favorites.length && favorites.map(recipe => <p>{recipe.dish_name}</p>)}
+        <h1 style={{display: 'inline-block'}} className='onePagePagination'>My favorites</h1>
+        {favorites.length ? <div className='onePageRecipesContainer'>{favorites.length && favorites.map(recipe => <OneRecipe getFavorites={getFavorites} recipe={recipe}/>)}</div> : <h3 className='onePagePagination'>You do not have any favorites</h3>}
     </div>)
 }
 

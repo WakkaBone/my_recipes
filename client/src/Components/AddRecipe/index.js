@@ -69,7 +69,7 @@ const AddRecipeIndex = () => {
             }), headers: {'Content-Type': 'application/json'}
         }).then(response => response.json()).then(result => {
             if(result.error && result.error.name !== 'TokenExpiredError') {
-                alert('Dish with this name already exists')
+                alert('Dish with this name already exists, please choose another name')
                 return
             }
             if(result.error && result.error.name === 'TokenExpiredError') {

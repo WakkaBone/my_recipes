@@ -1,9 +1,14 @@
-import React, {useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 import {Navigate} from "react-router-dom";
 import {serverUrl} from "../../constants";
+import OneRecipe from "../ViewRecipe/OneRecipe";
+import EditRecipe from "./EditRecipe";
 
 const MyRecipesIndex = () => {
     const [myRecipes, setMyRecipes] = useState([])
+    const [isEdit, setIsEdit] = useState(false)
+    const [editedRecipe, setEditedRecipe] = useState('')
+
     const getMyRecipes = async () => {
         await fetch(`${serverUrl}/recipe/getMyRecipes`, {method: 'post', body: JSON.stringify({token: localStorage.getItem('recipe_token')}), headers: {'Content-Type': 'application/json'}})
             .then(response => response.json()).then(result => {
@@ -17,13 +22,19 @@ const MyRecipesIndex = () => {
     }
 
     useEffect(()=> {getMyRecipes()}, [])
-    //TODO EDIT RECIPES
-    //TODO DESIGN
 
     if(!localStorage.getItem('recipe_token')) return <Navigate to='/'/>
     else return (<div>
-        <h1>My recipes</h1>
-        {myRecipes.length ? myRecipes.map(recipe => <p>{recipe.dish_name}</p>) : <span>You haven't added any recipes yet</span>}
+        {isEdit ? <EditRecipe setIsEdit={setIsEdit} editedRecipe={editedRecipe}/> :
+
+            <Fragment>
+                <h1 style={{display: 'inline-block'}} className='onePagePagination'>My recipes</h1>
+                {myRecipes.length ?
+                    <div className='onePageRecipesContainer'>{myRecipes.length && myRecipes.map(recipe =>
+                        <OneRecipe setIsEdit={setIsEdit} setEditedRecipe={setEditedRecipe}
+                                   recipe={recipe}/>)}</div> : <h3 className='onePagePagination'>You haven't added any recipes yet</h3>}
+            </Fragment>
+        }
     </div>);
 };
 

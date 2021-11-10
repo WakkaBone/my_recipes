@@ -12,12 +12,24 @@ const Inputs = ({dishTitle, setDishTitle, setDishDescription, setPreparation, se
         setCategories([...categories])
     }
 
+    const uploadHandler = async () => {
+        setLoader('Image is loading')
+        const formData = new FormData()
+        formData.append('image', imgRef.current.files[0])
+        await fetch(`${serverUrl}/recipe/uploadImage`, {method: 'post', body: formData})
+            .then(response => response.json()).then(result => {
+                setImage(result.imageData.secure_url)
+                setLoader('Image loaded')
+            })
+            .catch(err => {if(err) console.log(err)})
+    }
+
     return (
         <div className='newRecipeInputs'>
             <h1>Create a new recipe</h1>
             <label>Dish title: <input type='text' onChange={(e) => setDishTitle(e.target.value)} value={dishTitle}
                                           placeholder='Dish title'/></label>
-            <textarea style={{marginBottom: '7px'}} placeholder='Dish description' onChange={(e) => {setDishDescription(e.target.value)}}/>
+            <textarea style={{marginBottom: '7px', width: '100%'}} placeholder='Dish description' onChange={(e) => {setDishDescription(e.target.value)}}/>
 
             <label>Preparation time: <input onChange={(e) => setPreparation(e.target.value)} type='time'
                                                placeholder='Preparation time'/></label>
@@ -33,24 +45,25 @@ const Inputs = ({dishTitle, setDishTitle, setDishDescription, setPreparation, se
                 <tr><td style={{padding: '0 10px 0 0'}}><label>Salad <input onChange={checkboxChangeHandler} className='checkbox' value='salad' type='checkbox'/></label></td><td><label>Soup <input onChange={checkboxChangeHandler} className='checkbox' value='soup' type='checkbox'/></label></td></tr>
                 <tr><td style={{padding: '0 10px 0 0'}}><label>Meat and chicken <input onChange={checkboxChangeHandler} className='checkbox' value='meat and chicken' type='checkbox'/></label></td><td><label>Fish and seafood <input onChange={checkboxChangeHandler} className='checkbox' value='fish and seafood' type='checkbox'/></label></td></tr>
                 <tr><td style={{padding: '0 10px 0 0'}}><label>Vegetables <input onChange={checkboxChangeHandler} className='checkbox' value='vegetables' type='checkbox'/></label></td><td><label>Fruits <input onChange={checkboxChangeHandler} className='checkbox' value='fruits' type='checkbox'/></label></td></tr>
+                <tr><td style={{padding: '0 10px 0 0'}}><label>Dairy <input onChange={checkboxChangeHandler} className='checkbox' value='dairy' type='checkbox'/></label></td><td><label>Dessert <input onChange={checkboxChangeHandler} className='checkbox' value='dessert' type='checkbox'/></label></td></tr>
                 <tr><td style={{padding: '0 10px 0 0'}}><label>Vegan <input onChange={checkboxChangeHandler} className='checkbox' value='vegan' type='checkbox'/></label></td><td><label>Drink <input onChange={checkboxChangeHandler} className='checkbox' value='drink' type='checkbox'/></label></td></tr>
             </table>
             <h3>Ingredients:</h3>
-            <textarea onChange={(e) => {
+            <textarea style={{width: '100%'}} onChange={(e) => {
                 const ingredients = e.target.value.split(',').map(ingredient => ingredient.trim())
                 setIngredients(ingredients)
             }}>List ingredients, separated by commas</textarea>
             <h3>Cooking steps:</h3>
             {steps.map((step, index) => {
-                if (index === 0) return <p><input onChange={(e) => {
+                if (index === 0) return <p><textarea style={{width: '100%'}} onChange={(e) => {
                     setSteps(value => {
                         value[index] = e.target.value
                         return value
                     })
-                }} type='text' placeholder={'step ' + (index + 1)}/>
+                }} placeholder={'step ' + (index + 1)}/>
                     <button onClick={addStepHandler}>Add next step</button>
                 </p>
-                return <p><input type='text' onChange={(e) => {
+                return <p><textarea style={{width: '100%'}} onChange={(e) => {
                     setSteps(value => {
                         value[index] = e.target.value
                         return value
@@ -61,19 +74,9 @@ const Inputs = ({dishTitle, setDishTitle, setDishDescription, setPreparation, se
                 </p>
             })}
 
-            <label>Upload an image of the dish <input onChange={async () => {
-                setLoader('Image is loading')
-                const formData = new FormData()
-                formData.append('image', imgRef.current.files[0])
-                await fetch(`${serverUrl}/recipe/uploadImage`, {method: 'post', body: formData})
-                    .then(response => response.json()).then(result => {
-                        setImage(result.imageData.secure_url)
-                        setLoader('Image loaded')
-                    })
-                    .catch(err => {if(err) console.log(err)})
-            }} ref={imgRef} type='file'/> {loader}</label>
+            <label>Upload an image of the dish <input onChange={uploadHandler} ref={imgRef} type='file'/> {loader}</label>
 
-            <button onClick={() => {setRecipeHandler()}}>Submit</button>
+            <button onClick={setRecipeHandler}>Submit</button>
             <b style={{color: 'red'}}>{errorMessage}</b>
          </div>
     );

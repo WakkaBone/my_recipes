@@ -39,15 +39,19 @@ const Modal = ({setModalActive, modalContent}) => {
         return (
             <div className='modalContainer'>
                 <div className='modalContentContainer'>
-                    <h1>Sign in</h1>
-                    <input type='email' value={email} onChange={(e) => setEmail(e.target.value)} placeholder='email'/>
-                    <input type='password' value={password} onChange={(e) => setPassword(e.target.value)}
-                           placeholder='password'/>
-                    <button onClick={() => {
-                        loginHandler()
-                    }}>Sign in</button>
-                    <button onClick={() => setModalActive(false)}>Close</button>
-                    <p className='authErrorMessage'>{errorMessage}</p>
+                    <div style={{textAlign: 'center'}}>
+                        <h1>Sign in</h1>
+                        <input type='email' value={email} onChange={(e) => setEmail(e.target.value)} placeholder='email'/>
+                        <input type='password' value={password} onChange={(e) => setPassword(e.target.value)}
+                               placeholder='password'/><p/>
+                    </div>
+                    <div style={{textAlign: 'center'}}>
+                        <button onClick={() => {
+                            loginHandler()
+                        }}>Sign in</button>
+                        <button onClick={() => setModalActive(false)}>Close</button>
+                        <p className='authErrorMessage'>{errorMessage}</p>
+                    </div>
                 </div>
             </div>
         )
@@ -56,30 +60,34 @@ const Modal = ({setModalActive, modalContent}) => {
         return (
             <div className='modalContainer'>
                 <div className='modalContentContainer'>
-                    <h1>Sign up</h1>
-                    <input type='email' value={email} onChange={(e) => setEmail(e.target.value)} placeholder='email'/>
-                    <input type='password' value={password} onChange={(e) => setPassword(e.target.value)}
-                           placeholder='password'/>
-                    <input type='text' value={username} onChange={(e) => setUsername(e.target.value)}
-                           placeholder='username'/>
-                    <button onClick={() => {
-                        signUpHandler()
-                    }}>Sign up</button>
-                    <button onClick={() => setModalActive(false)}>Close</button>
-                    <p className='authErrorMessage'>{errorMessage}</p>
+                    <div style={{textAlign: 'center'}}>
+                        <h1>Sign up</h1>
+                        <input type='email' value={email} onChange={(e) => setEmail(e.target.value)} placeholder='email'/>
+                        <input type='password' value={password} onChange={(e) => setPassword(e.target.value)}
+                               placeholder='password'/>
+                        <input type='text' value={username} onChange={(e) => setUsername(e.target.value)}
+                               placeholder='username'/><p/>
+                    </div>
+                    <div style={{textAlign: 'center'}}>
+                        <button onClick={() => {
+                            signUpHandler()
+                        }}>Sign up</button>
+                        <button onClick={() => setModalActive(false)}>Close</button>
+                        <p className='authErrorMessage'>{errorMessage}</p>
+                    </div>
                 </div>
             </div>
         )
     } else return (
         <div className='modalContainer'>
             <div className='modalContentContainer'>
-                <h1>Sign out</h1>
-                Are you sure you want to logout?
-                <button onClick={() => {
+                <div><h1>Sign out</h1>
+                    <p>Are you sure you want to logout?</p></div>
+                <div><button onClick={() => {
                     localStorage.removeItem('recipe_token')
                     setModalActive(false)
                 }}>Sign out</button>
-                <button onClick={() => setModalActive(false)}>Close</button>
+                    <button onClick={() => setModalActive(false)}>Close</button></div>
             </div>
         </div>
     )
