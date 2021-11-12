@@ -1,6 +1,7 @@
-import React, {useState, useEffect, useRef, Fragment} from 'react';
-import {serverUrl} from "../../constants";
+import React, {useState, useEffect, useCallback, Fragment} from 'react';
+import {inputValidation, serverUrl} from "../../constants";
 import {FiLoader} from 'react-icons/fi'
+import CategoriesTable from "../CategoriesTable";
 
 const EditRecipe = ({setIsEdit, editedRecipe}) => {
     const [recipe, setRecipe] = useState({})
@@ -15,12 +16,7 @@ const EditRecipe = ({setIsEdit, editedRecipe}) => {
     const [portions, setPortions] = useState(1)
     const [errorMessage, setErrorMessage] = useState('')
 
-    const checkboxChangeHandler = () => {
-        const categories = []
-        const checkboxes = document.getElementsByClassName('checkbox')
-        for(let box of checkboxes){if(box.checked) categories.push(box.value)}
-        setCategories([...categories])
-    }
+    const beforeUnload = useCallback((e) => {e.returnValue = 'Are you sure you want to leave?'}, [])
 
     const getRecipe = async () => {
         await fetch(`${serverUrl}/recipe/getOneRecipe`, {
@@ -45,69 +41,41 @@ const EditRecipe = ({setIsEdit, editedRecipe}) => {
             .catch(err => {if (err) console.log(err)})
     }
 
-    const addStepHandler = () => {setSteps(value => [...value, ''])}
-    const deleteStepHandler = (index) => {
-        setSteps(value => {
-            const newArr = [...value]
-            newArr.splice(index, 1)
-            return newArr
-        })
-    }
-
     const updateRecipeHandler = async () => {
-        if (!dishTitle) {
-            setErrorMessage('Please enter the dish title')
-            return
-        }
-        if (!dishDescription) {
-            setErrorMessage('Please enter the dish description')
-            return
-        }
-        if (!categories.length) {
-            setErrorMessage('Please select at least one category')
-            return
-        }
-        if (!ingredients) {
-            setErrorMessage('Please enter the ingredients')
-            return
-        }
-        if (!steps) {
-            setErrorMessage('Please enter the cooking steps')
-            return
-        }
-        if (!preparation) {
-            setErrorMessage('Please enter the preparation time')
-            return
-        }
-        if (!portions) {
-            setErrorMessage('Please enter the number of portions')
+        const validation = inputValidation(dishTitle, dishDescription, categories, ingredients, steps, preparation, portions)
+        if(validation) {
+            setErrorMessage(validation)
             return
         }
         const token = localStorage.getItem('recipe_token')
         await fetch(`${serverUrl}/recipe/updateRecipe`, {
             method: 'put', body: JSON.stringify({
-                token, recipe: recipe.dish_name,
-                recipeNewTitle: dishTitle,
-                recipeNewDescription: dishDescription,
+                token, recipe: recipe.dish_name.trim(),
+                recipeNewTitle: dishTitle.trim(),
+                recipeNewDescription: dishDescription.trim(),
                 recipeNewLevel: dishLevel,
                 recipeNewCategories: categories,
-                recipeNewIngredients: ingredients,
+                recipeNewIngredients: ingredients.map(ing => ing.trim()).filter(ing => ing),
                 recipeNewPreparationTime: preparation,
-                recipeNewSteps: steps,
+                recipeNewSteps: steps.map(step => step.trim()).filter(step => step),
                 recipeNewPortions: portions
             }), headers: {'Content-Type': 'application/json'}
         })
             .then(response => response.json()).then(result => {
                 if(result.error && result.error.detail) {
-                    alert(result.error.detail+'. Пожалуйста, выберите другое название.')
+                    alert(result.error.detail+'. Please, choose another name.')
                     return
                 }
                 if(result.error && result.error.name === 'TokenExpiredError') {
                     alert('Token expired, log in again')
                     localStorage.removeItem('recipe_token')
+                    window.removeEventListener('beforeunload', beforeUnload, true)
                     window.location.reload()
                 }
-                else window.location.reload()
+                else {
+                    window.removeEventListener('beforeunload', beforeUnload, true)
+                    window.location.reload()
+                }
             })
             .catch(e => {
                 if (e) console.log(e)
@@ -126,11 +94,13 @@ const EditRecipe = ({setIsEdit, editedRecipe}) => {
             .catch(e => {if(e) console.log(e)})
     }
 
-    useEffect(() => {getRecipe()}, [])
+    useEffect(() => {
+        window.addEventListener('beforeunload', beforeUnload, true)
+        getRecipe()
+    }, [])
     return (
         <div className='newRecipeInputs'>
             {!recipe.dish_name ? <FiLoader/> :
-
                 <Fragment>
                     <label>Dish title: <input type='text' onChange={(e) => setDishTitle(e.target.value)} value={dishTitle}
                                               placeholder='Dish title'/></label>
@@ -146,14 +116,7 @@ const EditRecipe = ({setIsEdit, editedRecipe}) => {
                     </select></label>
 
                     <h3>Categories:</h3>
-                    <table>
-                        <tr><td style={{padding: '0 10px 0 0'}}><label>Main course <input onChange={checkboxChangeHandler} className='checkbox' value='main course' type='checkbox'/></label></td><td><label>Second course and snacks <input onChange={checkboxChangeHandler} className='checkbox' value='second course and snacks' type='checkbox'/></label></td></tr>
-                        <tr><td style={{padding: '0 10px 0 0'}}><label>Salad <input onChange={checkboxChangeHandler} className='checkbox' value='salad' type='checkbox'/></label></td><td><label>Soup <input onChange={checkboxChangeHandler} className='checkbox' value='soup' type='checkbox'/></label></td></tr>
-                        <tr><td style={{padding: '0 10px 0 0'}}><label>Meat and chicken <input onChange={checkboxChangeHandler} className='checkbox' value='meat and chicken' type='checkbox'/></label></td><td><label>Fish and seafood <input onChange={checkboxChangeHandler} className='checkbox' value='fish and seafood' type='checkbox'/></label></td></tr>
-                        <tr><td style={{padding: '0 10px 0 0'}}><label>Vegetables <input onChange={checkboxChangeHandler} className='checkbox' value='vegetables' type='checkbox'/></label></td><td><label>Fruits <input onChange={checkboxChangeHandler} className='checkbox' value='fruits' type='checkbox'/></label></td></tr>
-                        <tr><td style={{padding: '0 10px 0 0'}}><label>Dairy <input onChange={checkboxChangeHandler} className='checkbox' value='dairy' type='checkbox'/></label></td><td><label>Dessert <input onChange={checkboxChangeHandler} className='checkbox' value='dessert' type='checkbox'/></label></td></tr>
-                        <tr><td style={{padding: '0 10px 0 0'}}><label>Vegan <input onChange={checkboxChangeHandler} className='checkbox' value='vegan' type='checkbox'/></label></td><td><label>Drink <input onChange={checkboxChangeHandler} className='checkbox' value='drink' type='checkbox'/></label></td></tr>
-                    </table>
+                    <CategoriesTable setCategories={setCategories}/>
 
                     <h3>Ingredients:</h3>
                     <textarea style={{width: '100%'}} onChange={(e) => {
@@ -163,24 +126,22 @@ const EditRecipe = ({setIsEdit, editedRecipe}) => {
 
                     <h3>Cooking steps:</h3>
                     {steps.map((step, index) => {
-                        if (index === 0) return <p><input defaultValue={steps[index]} onChange={(e) => {
+                        return <textarea key={index} value={steps[index]} style={{width: '100%'}} onChange={(e) => {
                             setSteps(value => {
-                                value[index] = e.target.value
-                                return value
-                            })
-                        }} type='text' placeholder={'step ' + (index + 1)}/>
-                            <button onClick={addStepHandler}>Add next step</button>
-                        </p>
-                        return <p><input defaultValue={steps[index]} type='text' onChange={(e) => {
-                            setSteps(value => {
-                                value[index] = e.target.value
-                                return value
+                                const newArr = [...value]
+                                newArr[index] = e.target.value
+                                return newArr
                             })
                         }} placeholder={'step ' + (index + 1)}/>
-                            <button onClick={addStepHandler}>Add a new step</button>
-                            <button onClick={() => deleteStepHandler(index)}>Delete step</button>
-                        </p>
                     })}
+                    <div>
+                        <button onClick={() => setSteps(value => [...value, ''])}>Add a new step</button>
+                        <button onClick={() => setSteps(value => {
+                            const newArr = [...value]
+                            newArr.pop()
+                            return newArr
+                        })}>Delete last step</button>
+                    </div><p/>
                 </Fragment>
 
             }

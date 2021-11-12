@@ -5,6 +5,17 @@ const jwt = require('jsonwebtoken')
 const Pool = require('pg').Pool
 const pool = new Pool({user: process.env.PG_USER, host: process.env.PG_HOST, database: process.env.PG_DATABASE, password: process.env.PG_PASSWORD, port: process.env.PG_PORT});
 
+const checkToken = async (req, res) => {
+    try{
+        const {token} = req.body
+        const id = jwt.verify(token, process.env.JWT_ACCESS_SECRET)
+        if(id) res.json({message: 'Token still valid'})
+        else res.json({error: 'Token expired'})
+    } catch (e) {
+        if(e) res.json({error: e})
+    }
+}
+
 const login = async (req, res) => {
     const errors = validator.validationResult(req)
     if(!errors.isEmpty()) return res.status(400).json({error: errors.array()})
@@ -17,7 +28,7 @@ const login = async (req, res) => {
             else {
                 const isMatch = await bcrypt.compare(password, result.rows[0].password)
                 if(isMatch) {
-                    const accessToken = jwt.sign({email}, process.env.JWT_ACCESS_SECRET, {expiresIn: "1h"})
+                    const accessToken = jwt.sign({email}, process.env.JWT_ACCESS_SECRET, {expiresIn: "5h"})
                     // const refreshToken = jwt.sign({email}, process.env.JWT_REFRESH_SECRET, {expiresIn: "7d"})
                     // res.cookie('jid', refreshToken, {httpOnly: true})
                     res.json({message: 'Logged in', accessToken})
@@ -52,4 +63,4 @@ const getUsers = async (req, res) => {
     })
 }
 
-module.exports = {login, register, getUsers, refreshToken}
+module.exports = {login, register, getUsers, refreshToken, checkToken}

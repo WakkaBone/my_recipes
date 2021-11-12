@@ -2,7 +2,7 @@ import React, {Fragment, useEffect, useRef, useState} from 'react';
 import {useParams} from "react-router-dom";
 import {IoIosTimer} from 'react-icons/io'
 import {MdOutlineFoodBank} from 'react-icons/md'
-import {GiCook} from 'react-icons/gi'
+import {GiCook, GiKnifeFork} from 'react-icons/gi'
 import {FcLike as Liked} from 'react-icons/fc'
 import {FiLoader} from 'react-icons/fi'
 import {AiOutlineHeart as NotLiked} from 'react-icons/ai'
@@ -25,7 +25,6 @@ const ViewOneRecipe = () => {
         const token = localStorage.getItem('recipe_token')
         await fetch(`${serverUrl}/recipe/checkRating`, {method: 'post', body: JSON.stringify({token, recipe: params.dish}), headers: {'Content-Type': 'application/json'}})
             .then(response => response.json()).then(result => {
-                console.log(result)
                 if(result.message === 'Already rated') {setCanRate(false)}
                 if(result.error && result.error.name === 'TokenExpiredError') {
                     alert('Your token expired, you need to log in again')
@@ -162,8 +161,8 @@ const ViewOneRecipe = () => {
                     <div><span><i>{recipe.dish_description}</i></span></div>
                     <div className='viewOneRecipeLevelAndTime'>
 <div>
-                        <div>Level: {recipe.howhard}</div>
-                        <div><IoIosTimer/> Preparation: ~ {recipe.preparation_time.split(':')[0] !== '00' && trimTime(recipe.preparation_time.split(':')[0]) + ' hour(s)'} {recipe.preparation_time.split(':')[1] !== '00' && trimTime(recipe.preparation_time.split(':')[1]) + ' minutes'}</div>
+                        <div><GiKnifeFork/> Level: {recipe.howhard}</div>
+                        <div><IoIosTimer/> Cooking: ~ {recipe.preparation_time.split(':')[0] !== '00' && trimTime(recipe.preparation_time.split(':')[0]) + ' hour(s)'} {recipe.preparation_time.split(':')[1] !== '00' && trimTime(recipe.preparation_time.split(':')[1]) + ' min.'}</div>
 </div>
                         <div>
                         <div><MdOutlineFoodBank/> Portions: {recipe.portions}</div>

@@ -21,6 +21,7 @@ authRouter.post('/register', [
     validator.check('password', 'Password cannot be shorter than 6 symbols').isLength({min: 6})
 ], authController.register)
 authRouter.get('/users', authController.getUsers)
+authRouter.post('/checkToken', authController.checkToken)
 
 // authRouter.post('/refresh', authController.refreshToken)
 

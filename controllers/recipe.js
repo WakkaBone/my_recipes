@@ -5,16 +5,22 @@ const pool = new Pool({user: process.env.PG_USER, host: process.env.PG_HOST, dat
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET})
 
+const escapeQuotes = (string) => string.split('').map(symbol => {
+    if (symbol === `"`) return `\\"`
+    if (symbol === `'`) return `\\'`
+    else return symbol
+}).join('')
+
 const newRecipe = async (req, res) => {
-try {
-    const {dishTitle, dishDescription, dishLevel, preparation, ingredients, steps, image, token, categories, portions} = req.body
-    const id = jwt.verify(token, process.env.JWT_ACCESS_SECRET)
-    const command = `insert into recipes(dish_name, dish_description, howhard, ingredients, steps, created, preparation_time, image, author_email, categories, portions) values
-    ('${dishTitle}', '${dishDescription}', '${dishLevel}', '{${ingredients.map(ing => ''+ing)}}', '{${steps.map(step => ''+step)}}', to_timestamp(${new Date()/1000.0}), '${preparation}', '${image}', '${id.email}', '{${categories.map(category => ''+category)}}', ${portions})`
-    await pool.query(command, (err) => err ? res.json({error: err}) : res.json({message: 'Recipe added'}))
-} catch (e) {
-    if(e) res.json({error: e})
-}
+    try {
+        const {dishTitle, dishDescription, dishLevel, preparation, ingredients, steps, image, token, categories, portions} = req.body
+        const id = jwt.verify(token, process.env.JWT_ACCESS_SECRET)
+        const command = `insert into recipes(dish_name, dish_description, howhard, ingredients, steps, created, preparation_time, image, author_email, categories, portions) values
+    ('${dishTitle}', '${dishDescription}', '${dishLevel}', '{${ingredients.map(ing => '"' + escapeQuotes(ing) + '"')}}', '{${steps.map(step => '"' + escapeQuotes(step) + '"')}}', to_timestamp(${new Date() / 1000.0}), '${preparation}', '${image}', '${id.email}', '{${categories.map(category => '' + category)}}', ${portions})`
+        await pool.query(command, (err) => err ? res.json({error: err}) : res.json({message: 'Recipe added'}))
+    } catch (e) {
+        if (e) res.json({error: e})
+    }
 }
 
 const getRecipes = async (req, res) => {
@@ -77,7 +83,7 @@ const getOneRecipe = async (req, res) => {
     try {
         const {dishName} = req.body
         const command = `select * from recipes where dish_name = '${dishName}'`
-        await pool.query(command, (err, result) => {return err ? res.json({error: err}) : res.json({recipe: result.rows})})
+        await pool.query(command, (err, result) => err ? res.json({error: err}) : res.json({recipe: result.rows}))
     } catch (e) {
         if(e) res.json({error: e})
     }
@@ -207,7 +213,7 @@ const updateRecipe = async (req, res) => {
     try {
         const {token, recipe, recipeNewTitle, recipeNewDescription, recipeNewLevel,recipeNewCategories,recipeNewIngredients,recipeNewPreparationTime,recipeNewSteps,recipeNewPortions} = req.body
         const id = jwt.verify(token, process.env.JWT_ACCESS_SECRET)
-        const command = `update recipes set dish_name = '${recipeNewTitle}', dish_description = '${recipeNewDescription}', howhard = '${recipeNewLevel}', ingredients = '{${recipeNewIngredients.map(ing => ''+ing)}}', steps = '{${recipeNewSteps.map(step => ''+step)}}', categories = '{${recipeNewCategories.map(category => ''+category)}}', portions = '${recipeNewPortions}', preparation_time = '${recipeNewPreparationTime}' where dish_name = '${recipe}' and author_email = '${id.email}'`
+        const command = `update recipes set dish_name = '${recipeNewTitle}', dish_description = '${recipeNewDescription}', howhard = '${recipeNewLevel}', ingredients = '{${recipeNewIngredients.map(ing => '"'+escapeQuotes(ing)+'"')}}', steps = '{${recipeNewSteps.map(step => '"'+escapeQuotes(step)+'"')}}', categories = '{${recipeNewCategories.map(category => ''+category)}}', portions = '${recipeNewPortions}', preparation_time = '${recipeNewPreparationTime}' where dish_name = '${recipe}' and author_email = '${id.email}'`
         await pool.query(command, (err, result) => {
             if(err) {res.json({error: err})}
             else res.json({message: 'Recipe modified'})

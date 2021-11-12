@@ -54,7 +54,7 @@ footer{display: flex; justify-content: space-around; border: 2px solid black; bo
 .viewOneRecipeContentContainer{flex: 2; display: inline-flex; flex-direction: column; background-color: rgba(245,245,245,0.8); padding: 20px; margin: 0 2% 2% 2%;}
 .viewOneRecipeContentContainer div{margin-bottom: 10px}
 .viewOneRecipeLevelAndTime{display: flex; justify-content: space-between}
-.viewOneRecipeLevelAndTime div{margin-right: 20px}
+.viewOneRecipeLevelAndTime div{margin-right: 10px}
 .viewOneRecipeIngredientsAndCategoriesContainer{display: flex}
 .viewOneRecipeIngredients{flex:1; border: 2px dashed black; padding: 10px; margin-bottom: 10px}
 .viewOneRecipeIngredients ul{list-style: none}
@@ -101,4 +101,6 @@ footer{display: flex; justify-content: space-around; border: 2px solid black; bo
     .headerAuth{flex-direction: column; align-items: flex-end}
     .viewAllRecipesFiltersContainer{flex-direction: column; align-items: center; flex-wrap: wrap}
     .viewAllRecipesFiltersContainer div{width: 80%}
+    .viewOneRecipeLevelAndTime{flex-direction: column}
+    .viewOneRecipeLevelAndTime div{margin-right: 10px}
 }

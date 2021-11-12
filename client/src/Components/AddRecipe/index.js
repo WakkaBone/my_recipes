@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Navigate} from 'react-router-dom'
 import Inputs from "./Inputs";
 import Image from "./Image";
-import {serverUrl} from "../../constants";
+import {inputValidation, serverUrl} from "../../constants";
 
 const AddRecipeIndex = () => {
     const [dishTitle, setDishTitle] = useState('')
@@ -16,52 +16,22 @@ const AddRecipeIndex = () => {
     const [portions, setPortions] = useState(1)
     const [errorMessage, setErrorMessage] = useState('')
 
-    const addStepHandler = () => {setSteps(value => [...value, ''])}
-    const deleteStepHandler = (index) => {
-        setSteps(value => {
-            const newArr = [...value]
-            newArr.splice(index, 1)
-            return newArr
-        })
-    }
+    useEffect(() => {window.addEventListener('beforeunload', function (e) {e.returnValue = 'Are you sure you want to leave?'})}, [])
 
     const setRecipeHandler = async () => {
-        if (!dishTitle) {
-            setErrorMessage('Please enter the dish title')
-            return
-        }
-        if (!dishDescription) {
-            setErrorMessage('Please enter the dish description')
-            return
-        }
-        if (!categories.length) {
-            setErrorMessage('Please select at least one category')
-            return
-        }
-        if (!ingredients) {
-            setErrorMessage('Please enter the ingredients')
-            return
-        }
-        if (!steps) {
-            setErrorMessage('Please enter the cooking steps')
-            return
-        }
-        if (!preparation) {
-            setErrorMessage('Please enter the preparation time')
-            return
-        }
-        if (!portions) {
-            setErrorMessage('Please enter the number of portions')
+        const validation = inputValidation(dishTitle, dishDescription, categories, ingredients, steps, preparation, portions)
+        if(validation) {
+            setErrorMessage(validation)
             return
         }
         await fetch(`${serverUrl}/recipe/newRecipe`, {
             method: 'post', body: JSON.stringify({
-                dishTitle,
-                dishDescription,
+                dishTitle: dishTitle.trim(),
+                dishDescription: dishDescription.trim(),
                 dishLevel,
                 preparation: preparation + ':00',
-                ingredients,
-                steps,
+                ingredients: ingredients.map(ing => ing.trim()).filter(ing => ing),
+                steps: steps.map(step => step.trim()).filter(step => step),
                 image,
                 categories,
                 portions,
@@ -86,7 +56,7 @@ const AddRecipeIndex = () => {
     if(!localStorage.getItem('recipe_token')) return <Navigate to='/'/>
     else return (
         <div className='newRecipeMainContainer'>
-        <Inputs addStepHandler={addStepHandler} deleteStepHandler={deleteStepHandler} setRecipeHandler={setRecipeHandler} dishTitle={dishTitle} setDishTitle={setDishTitle} dishDescription={dishDescription} setDishDescription={setDishDescription} dishLevel={dishLevel} setDishLevel={setDishLevel} ingredients={ingredients} setIngredients={setIngredients} preparation={preparation} setPreparation={setPreparation} steps={steps} setSteps={setSteps} setImage={setImage} image={image} setCategories={setCategories} portions={portions} setPortions={setPortions} errorMessage={errorMessage}/>
+        <Inputs setRecipeHandler={setRecipeHandler} dishTitle={dishTitle} setDishTitle={setDishTitle} dishDescription={dishDescription} setDishDescription={setDishDescription} dishLevel={dishLevel} setDishLevel={setDishLevel} ingredients={ingredients} setIngredients={setIngredients} preparation={preparation} setPreparation={setPreparation} steps={steps} setSteps={setSteps} setImage={setImage} image={image} setCategories={setCategories} portions={portions} setPortions={setPortions} errorMessage={errorMessage}/>
         <Image/>
         </div>
     )
